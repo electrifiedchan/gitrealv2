@@ -179,8 +179,8 @@ def extract_projects_from_resume(resume_text):
 
 def analyze_resume_vs_code(resume_text, code_context, project_name=None):
     """
-    The 'Roast' Function. Returns strict JSON analysis.
-    Now upgraded to detect 'Phantom Projects' (Claims with no links).
+    The 'Roast' Function. Returns strict JSON analysis with credibility scoring.
+    Performs forensic audit: Seniority Check, Skill Stuffing, Modernity Check, Commitment Check.
     If project_name is provided, focuses ONLY on that specific project.
     """
     # Check if this is a "no code" scenario (PHANTOMWARE mode)
@@ -192,9 +192,7 @@ def analyze_resume_vs_code(resume_text, code_context, project_name=None):
         project_focus = f"""
     ⚠️ CRITICAL INSTRUCTION - FOCUS ON ONE PROJECT ONLY:
     The user has selected the project: "{project_name}"
-
     ONLY analyze THIS specific project. Do NOT mention or flag other projects from the resume.
-    Ignore all other projects, hackathons, or experiences - focus 100% on "{project_name}".
     """
 
     # Special prompt for PHANTOMWARE mode (no code provided)
@@ -208,58 +206,72 @@ def analyze_resume_vs_code(resume_text, code_context, project_name=None):
         {resume_text[:4000]}
 
         YOUR TASK:
-        Find the project "{project_name}" in the resume and flag ALL its claims as UNVERIFIED/PHANTOMWARE since no code was provided.
+        Find the project "{project_name}" in the resume and flag ALL its claims as UNVERIFIED/PHANTOMWARE.
 
-        OUTPUT JSON FORMAT (use EXACTLY these 4 keys):
+        OUTPUT JSON FORMAT (use EXACTLY these 6 keys):
         {{
+            "credibility_score": 0,
+            "verdict": "Project '{project_name}' is PHANTOMWARE - zero code evidence provided to verify claims.",
             "matches": [],
             "red_flags": [
                 "🚩 PHANTOMWARE: Project '{project_name}' has NO GitHub link - all claims are unverified.",
-                "🚩 UNVERIFIED: [List each specific claim from this project that cannot be verified]"
+                "🚩 UNVERIFIED: [List each specific claim from this project]"
             ],
             "missing_gems": [],
-            "summary": "Project '{project_name}' cannot be verified - no code evidence provided. All claims are PHANTOMWARE."
+            "summary": "Cannot verify any claims. Credibility: 0/100"
         }}
 
-        Extract the specific claims made about "{project_name}" and list each one as a red flag since there's no code to prove it.
+        Extract the specific claims made about "{project_name}" and list each one as a red flag.
         """
     else:
         prompt = f"""
         You are 'GitReal', a ruthless Senior Staff Engineer and Forensic Resume Auditor.
         {project_focus}
 
-        INPUT DATA:
-        1. CANDIDATE RESUME (The Claims):
+        **INPUT DATA:**
+
+        **1. CANDIDATE RESUME (The Claims):**
         {resume_text[:4000]}
 
-        2. ACTUAL CODEBASE (The Evidence):
+        **2. CODEBASE EVIDENCE (The Truth):**
         {code_context[:50000] if code_context else "NO CODE PROVIDED"}
 
-        YOUR MISSION:
-        {"Analyze ONLY the project '" + project_name + "' - ignore everything else on the resume." if project_name else "Perform a gap analysis between what the candidate *says* they did and what they can *prove* they did."}
+        **YOUR AUDIT PROTOCOL:**
 
-        CRITICAL CHECKS:
-        1. **Phantom Projects:** If NO code was provided for this project, flag it as PHANTOMWARE - claims without proof.
-        2. **Skill Inflation:** If Resume says "Expert in X" but Code only contains "Basic Y", flag it.
-        3. **Reality Check:** If claims don't match the code quality/complexity, call it out.
+        1. **Seniority Check:** Compare Job Titles (e.g., "Senior", "Lead", "Architect") against code complexity.
+           - If they claim "Senior" but write monolithic, un-modularized code with no error handling -> FLAG IT.
 
-        OUTPUT JSON FORMAT (Strict - use EXACTLY these 4 keys):
+        2. **Skill Stuffing:** Look at the "Skills" section.
+           - If they list "Docker, Kubernetes, AWS" but repo has no Dockerfile or config -> FLAG as 'Keyword Stuffing'.
+
+        3. **Modernity Check:**
+           - If they claim "Modern React" but use class components and `var` -> FLAG as 'Outdated'.
+
+        4. **Commitment Check:**
+           - If they claim "Lead Developer" but code volume/complexity suggests tutorial copy -> FLAG IT.
+
+        **OUTPUT FORMAT (Strict JSON with EXACTLY these 6 keys):**
         {{
+            "credibility_score": 75,
+            "verdict": "A 1-sentence ruthless summary (e.g. 'Claims Senior Architect, but codes like Junior Intern.')",
             "matches": [
-                "✅ Verified: Python skills confirmed via 'data_loader.py'",
-                "✅ Verified: API integration found in 'routes.js'"
+                "✅ Verified: 'Python' proficiency confirmed via complex decorators in data.py.",
+                "✅ Verified: 'System Design' claim supported by modular folder structure."
             ],
             "red_flags": [
-                "🚩 PHANTOMWARE: Claimed 'Won Hackathon' but provided NO LINK to the project.",
-                "🚩 UNVERIFIED: Lists 'Microservices Architecture' but no repo provided to prove it.",
-                "🚩 SECURITY: Hardcoded secrets found in 'config.py'."
+                "🚩 SENIORITY MISMATCH: Resume claims 'Senior Lead', but code lacks basic error handling.",
+                "🚩 KEYWORD STUFFING: Lists 'Microservices/AWS/Docker' but repo is a simple local script.",
+                "🚩 SECURITY RISK: Hardcoded secrets found despite 'Security Expert' claim.",
+                "🚩 OUTDATED: Claims 'Modern React' but uses class components and var."
             ],
             "missing_gems": [
-                "💎 Found 'Docker' usage in code, but not listed on Resume.",
-                "💎 Code demonstrates 'AsyncIO' patterns - add this to skills."
+                "💎 Code demonstrates 'Test Driven Development' (tests folder found), but not on resume.",
+                "💎 Used 'AsyncIO' patterns - add this to skills."
             ],
-            "summary": "Brief verdict on THIS project only."
+            "summary": "Brief verdict with credibility score context."
         }}
+
+        Be ruthless. Score 0-100 based on how honest the resume is compared to the code.
         """
 
     try:

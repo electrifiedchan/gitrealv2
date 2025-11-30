@@ -804,14 +804,44 @@ const Dashboard = ({ onNavigate, uploadedFile, selectedProject }: { onNavigate: 
         <button onClick={() => onNavigate('landing')} className="text-xs hover:text-white">[ DISCONNECT ]</button>
       </header>
 
-      {/* Summary Banner */}
-      {data.summary && (
-        <div className="mb-8 p-4 bg-black border-2 border-[#00FF41] shadow-[0_0_30px_rgba(0,255,65,0.3)]">
-          <p className="text-[#00FF41] font-mono text-center text-lg">
-            📋 <span className="font-bold">VERDICT:</span> {data.summary}
+      {/* Credibility Score + Verdict Banner */}
+      <div className="mb-8 p-6 bg-black border-2 border-[#00FF41] shadow-[0_0_30px_rgba(0,255,65,0.3)]">
+        {/* Credibility Score */}
+        {data.credibility_score !== undefined && (
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <span className="text-gray-400 font-mono text-sm">CREDIBILITY SCORE:</span>
+            <div className="relative w-48 h-4 bg-gray-800 border border-gray-600">
+              <div
+                className={`h-full transition-all duration-1000 ${
+                  data.credibility_score >= 70 ? 'bg-[#00FF41]' :
+                  data.credibility_score >= 40 ? 'bg-yellow-500' : 'bg-red-500'
+                }`}
+                style={{ width: `${data.credibility_score}%` }}
+              />
+            </div>
+            <span className={`font-mono text-2xl font-bold ${
+              data.credibility_score >= 70 ? 'text-[#00FF41]' :
+              data.credibility_score >= 40 ? 'text-yellow-500' : 'text-red-500'
+            }`}>
+              {data.credibility_score}/100
+            </span>
+          </div>
+        )}
+
+        {/* Verdict */}
+        {data.verdict && (
+          <p className="text-[#00FF41] font-mono text-center text-lg border-t border-gray-700 pt-4">
+            ⚖️ <span className="font-bold">VERDICT:</span> {data.verdict}
           </p>
-        </div>
-      )}
+        )}
+
+        {/* Fallback to summary if no verdict */}
+        {!data.verdict && data.summary && (
+          <p className="text-[#00FF41] font-mono text-center text-lg">
+            📋 <span className="font-bold">SUMMARY:</span> {data.summary}
+          </p>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
 
