@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Terminal,
   ShieldAlert,
@@ -21,7 +21,8 @@ import {
   Volume2,
   VolumeX,
   Phone,
-  PhoneOff
+  PhoneOff,
+  Github
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -180,7 +181,7 @@ body {
 
 .pill-zone {
   position: absolute;
-  width: 14%; 
+  width: 14%;
   height: 14%;
   border-radius: 50%;
   cursor: pointer;
@@ -188,28 +189,73 @@ body {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Pill Pulse Ring Animation */
+@keyframes pill-pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.3); opacity: 0; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+.pill-zone::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  opacity: 0;
+  animation: pill-pulse 2s ease-out infinite;
+}
+
+.pill-zone:hover::before {
+  opacity: 1;
+}
+
 /* RED PILL (User's LEFT / Morpheus' Right Hand) */
 .pill-red {
-  top: 77%; 
+  top: 77%;
   left: 12%;
-  box-shadow: 0 0 20px rgba(255, 23, 68, 0);
+  box-shadow: 0 0 20px rgba(255, 23, 68, 0.3);
+  animation: red-glow-idle 2s ease-in-out infinite;
 }
+
+@keyframes red-glow-idle {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 23, 68, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(255, 23, 68, 0.5); }
+}
+
 .pill-red:hover {
-  box-shadow: 0 0 100px rgba(255, 23, 68, 1), 0 0 150px rgba(255, 23, 68, 0.5);
-  background: radial-gradient(circle, rgba(255,23,68,0.4) 0%, rgba(0,0,0,0) 70%);
-  transform: scale(1.05);
+  animation: none;
+  box-shadow: 0 0 100px rgba(255, 23, 68, 1), 0 0 150px rgba(255, 23, 68, 0.5), inset 0 0 30px rgba(255, 23, 68, 0.3);
+  background: radial-gradient(circle, rgba(255,23,68,0.5) 0%, rgba(0,0,0,0) 70%);
+  transform: scale(1.15);
+}
+
+.pill-red::before {
+  border-color: #FF1744;
 }
 
 /* BLUE PILL (User's RIGHT / Morpheus' Left Hand) */
 .pill-blue {
-  top: 77%; 
+  top: 77%;
   right: 11%;
-  box-shadow: 0 0 20px rgba(0, 255, 255, 0);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+  animation: cyan-glow-idle 2s ease-in-out infinite;
 }
+
+@keyframes cyan-glow-idle {
+  0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(0, 255, 255, 0.5); }
+}
+
 .pill-blue:hover {
-  box-shadow: 0 0 100px rgba(0, 255, 255, 1), 0 0 150px rgba(0, 255, 255, 0.5);
-  background: radial-gradient(circle, rgba(0,255,255,0.4) 0%, rgba(0,0,0,0) 70%);
-  transform: scale(1.05);
+  animation: none;
+  box-shadow: 0 0 100px rgba(0, 255, 255, 1), 0 0 150px rgba(0, 255, 255, 0.5), inset 0 0 30px rgba(0, 255, 255, 0.3);
+  background: radial-gradient(circle, rgba(0,255,255,0.5) 0%, rgba(0,0,0,0) 70%);
+  transform: scale(1.15);
+}
+
+.pill-blue::before {
+  border-color: #00FFFF;
 }
 
 .tooltip {
@@ -305,11 +351,398 @@ body {
   50% { transform: translateX(0%); }
   100% { transform: translateX(100%); }
 }
+
+/* MATRIX RAIN ANIMATION - Proper falling effect */
+@keyframes matrix-fall {
+  0% {
+    transform: translateY(-100vh);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+@keyframes matrix-glow {
+  0%, 100% { text-shadow: 0 0 5px #00FF41, 0 0 10px #00FF41; }
+  50% { text-shadow: 0 0 20px #00FF41, 0 0 30px #00FF41, 0 0 40px #00FF41; }
+}
+
+.matrix-column {
+  position: absolute;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  color: #00FF41;
+  text-shadow: 0 0 10px #00FF41;
+  user-select: none;
+  animation: matrix-fall linear infinite;
+}
+
+.matrix-char {
+  font-size: 16px;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.matrix-char-bright {
+  color: #FFFFFF !important;
+  text-shadow: 0 0 20px #00FF41, 0 0 30px #FFFFFF !important;
+}
+
+/* ============================================
+   PREMIUM INTERACTIVE BUTTON EFFECTS
+   ============================================ */
+
+/* Base Matrix Button */
+.matrix-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+}
+
+.matrix-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(0, 255, 65, 0.5), 0 0 40px rgba(0, 255, 65, 0.3);
+}
+
+.matrix-btn:active {
+  transform: scale(0.98);
+}
+
+/* Glow Pulse Effect */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 5px rgba(0, 255, 65, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(0, 255, 65, 0.8), 0 0 30px rgba(0, 255, 65, 0.4); }
+}
+
+.matrix-btn-glow {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.matrix-btn-glow:hover {
+  animation: none;
+  box-shadow: 0 0 30px rgba(0, 255, 65, 1), 0 0 60px rgba(0, 255, 65, 0.5);
+}
+
+/* Ripple Effect */
+.matrix-btn .ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(0, 255, 65, 0.4);
+  transform: scale(0);
+  animation: ripple-effect 0.6s linear;
+  pointer-events: none;
+}
+
+@keyframes ripple-effect {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Border Chase Animation */
+.matrix-btn-border {
+  position: relative;
+}
+
+.matrix-btn-border::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 2px solid transparent;
+  background: linear-gradient(90deg, #00FF41, #00FF41) border-box;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.matrix-btn-border:hover::before {
+  opacity: 1;
+  animation: border-chase 1s linear infinite;
+}
+
+@keyframes border-chase {
+  0% { clip-path: inset(0 100% 100% 0); }
+  25% { clip-path: inset(0 0 100% 0); }
+  50% { clip-path: inset(0 0 0 100%); }
+  75% { clip-path: inset(100% 0 0 0); }
+  100% { clip-path: inset(0 100% 0 0); }
+}
+
+/* Glitch Text on Hover */
+.matrix-btn-glitch:hover {
+  animation: btn-glitch 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+}
+
+@keyframes btn-glitch {
+  0% { transform: scale(1.05) translate(0); }
+  20% { transform: scale(1.05) translate(-2px, 2px); }
+  40% { transform: scale(1.05) translate(-2px, -2px); }
+  60% { transform: scale(1.05) translate(2px, 2px); }
+  80% { transform: scale(1.05) translate(2px, -2px); }
+  100% { transform: scale(1.05) translate(0); }
+}
+
+/* Red Danger Button */
+.matrix-btn-danger {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.matrix-btn-danger:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.5), 0 0 40px rgba(255, 0, 0, 0.3);
+  text-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+}
+
+/* Cyan/Blue Button */
+.matrix-btn-cyan {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.matrix-btn-cyan:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5), 0 0 40px rgba(0, 255, 255, 0.3);
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+}
+
+/* ============================================
+   SCAN LINE EFFECT
+   ============================================ */
+@keyframes scan-line {
+  0% { top: -10%; }
+  100% { top: 110%; }
+}
+
+.animate-scan-line {
+  animation: scan-line 3s linear infinite;
+}
+
+/* ============================================
+   CARD HOVER EFFECTS
+   ============================================ */
+.hover-card {
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.hover-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 10px 40px rgba(0, 255, 65, 0.2);
+}
+
+/* Stagger animation for cards */
+@keyframes card-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-animate {
+  animation: card-slide-in 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+/* List item stagger */
+@keyframes list-item-in {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.list-item-animate {
+  animation: list-item-in 0.3s ease-out forwards;
+  opacity: 0;
+}
 `;
 
 // --- HELPER COMPONENTS ---
 
-// Matrix Loading Screen - Reusable component
+// Premium Interactive Button with Ripple Effect
+const MatrixButton = ({
+  children,
+  onClick,
+  className = "",
+  variant = "default", // default, danger, cyan, glow
+  disabled = false
+}: {
+  children: React.ReactNode,
+  onClick?: () => void,
+  className?: string,
+  variant?: "default" | "danger" | "cyan" | "glow",
+  disabled?: boolean
+}) => {
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  const createRipple = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const button = btnRef.current;
+    if (!button) return;
+
+    const rect = button.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = e.clientX - rect.left - size / 2;
+    const y = e.clientY - rect.top - size / 2;
+
+    const ripple = document.createElement("span");
+    ripple.className = "ripple";
+    ripple.style.width = ripple.style.height = `${size}px`;
+    ripple.style.left = `${x}px`;
+    ripple.style.top = `${y}px`;
+
+    button.appendChild(ripple);
+
+    setTimeout(() => ripple.remove(), 600);
+  };
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    createRipple(e);
+    onClick?.();
+  };
+
+  const variantClasses = {
+    default: "matrix-btn",
+    danger: "matrix-btn matrix-btn-danger",
+    cyan: "matrix-btn matrix-btn-cyan",
+    glow: "matrix-btn matrix-btn-glow"
+  };
+
+  return (
+    <button
+      ref={btnRef}
+      onClick={handleClick}
+      disabled={disabled}
+      className={`${variantClasses[variant]} ${className}`}
+    >
+      {children}
+    </button>
+  );
+};
+
+// Animated Counter - Numbers count up from 0 to target
+const AnimatedCounter = ({ target, duration = 2000, className = "" }: { target: number, duration?: number, className?: string }) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (target === 0) return;
+
+    const startTime = Date.now();
+    const step = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Easing function for smooth slowdown
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.floor(easeOut * target));
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    };
+    requestAnimationFrame(step);
+  }, [target, duration]);
+
+  return <span className={className}>{count}</span>;
+};
+
+// Typewriter Effect - Text types out character by character
+const TypewriterText = ({ text, speed = 30, className = "" }: { text: string, speed?: number, className?: string }) => {
+  const [displayText, setDisplayText] = useState("");
+  const [showCursor, setShowCursor] = useState(true);
+
+  useEffect(() => {
+    setDisplayText("");
+    let index = 0;
+    const interval = setInterval(() => {
+      if (index < text.length) {
+        setDisplayText(text.slice(0, index + 1));
+        index++;
+      } else {
+        clearInterval(interval);
+        // Blink cursor after typing complete
+        setTimeout(() => setShowCursor(false), 1000);
+      }
+    }, speed);
+
+    return () => clearInterval(interval);
+  }, [text, speed]);
+
+  return (
+    <span className={className}>
+      {displayText}
+      {showCursor && <span className="animate-pulse">▌</span>}
+    </span>
+  );
+};
+
+// Matrix Rain Effect - Proper falling animation like the movie
+const MatrixRain = ({ opacity = 0.7 }: { opacity?: number }) => {
+  const matrixChars = "アイウエオカキクケコサシスセソタチツテトナニヌネノ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const columns = 40; // Number of rain columns
+
+  // Pre-generate columns for SSR compatibility
+  const columnData = useMemo(() => {
+    return [...Array(columns)].map((_, colIndex) => {
+      const charCount = 10 + Math.floor(Math.random() * 15);
+      const duration = 4 + Math.random() * 6; // 4-10s fall speed
+      const delay = Math.random() * 8;
+      const left = (colIndex / columns) * 100 + (Math.random() - 0.5) * 3; // Spread with variance
+      const chars = Array.from({ length: charCount }, () =>
+        matrixChars[Math.floor(Math.random() * matrixChars.length)]
+      );
+      return { charCount, duration, delay, left, chars };
+    });
+  }, []);
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ opacity }}>
+      {columnData.map((col, colIndex) => (
+        <div
+          key={colIndex}
+          className="matrix-column"
+          style={{
+            left: `${col.left}%`,
+            animationDuration: `${col.duration}s`,
+            animationDelay: `${col.delay}s`,
+          }}
+        >
+          {col.chars.map((char, charIndex) => (
+            <span
+              key={charIndex}
+              className={`matrix-char ${charIndex === col.chars.length - 1 ? 'matrix-char-bright' : ''}`}
+              style={{
+                opacity: 0.2 + (charIndex / col.chars.length) * 0.8,
+              }}
+            >
+              {char}
+            </span>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// Matrix Loading Screen - Reusable component with proper rain
 const MatrixLoader = ({
   title = "PROCESSING...",
   subtitle = "PLEASE WAIT...",
@@ -319,33 +752,10 @@ const MatrixLoader = ({
   subtitle?: string,
   showRain?: boolean
 }) => {
-  const matrixChars = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789";
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-black">
       {/* Matrix Rain Background */}
-      {showRain && (
-        <div className="absolute inset-0 overflow-hidden opacity-30">
-          {[...Array(15)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute text-[#00FF41] text-xs font-mono whitespace-nowrap animate-pulse"
-              style={{
-                left: `${i * 7}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${i * 0.2}s`,
-                opacity: 0.3 + Math.random() * 0.4
-              }}
-            >
-              {[...Array(20)].map((_, j) => (
-                <div key={j} style={{ animationDelay: `${j * 0.1}s` }}>
-                  {matrixChars[Math.floor(Math.random() * matrixChars.length)]}
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      )}
+      {showRain && <MatrixRain opacity={0.4} />}
 
       {/* Main Content */}
       <div className="relative z-10 text-[#00FF41] font-mono flex flex-col items-center gap-6">
@@ -356,33 +766,38 @@ const MatrixLoader = ({
         </div>
 
         {/* Title with glitch effect */}
-        <div className="text-2xl md:text-3xl font-bold tracking-wider text-center">
+        <div className="text-2xl md:text-3xl font-bold tracking-wider text-center drop-shadow-[0_0_10px_rgba(0,255,65,0.8)]">
           <span className="animate-pulse">{title}</span>
         </div>
 
         {/* Subtitle */}
-        <div className="text-sm text-green-700 tracking-widest">
+        <div className="text-sm text-green-500 tracking-widest">
           {subtitle}
         </div>
 
         {/* Progress bar */}
-        <div className="w-64 h-1 bg-[#003300] overflow-hidden">
+        <div className="w-64 h-2 bg-[#003300] overflow-hidden border border-[#00FF41]/30">
           <div
-            className="h-full bg-[#00FF41] animate-pulse"
+            className="h-full bg-[#00FF41]"
             style={{
               width: '100%',
-              animation: 'loading-bar 2s ease-in-out infinite'
+              animation: 'loading-bar 2s ease-in-out infinite',
+              boxShadow: '0 0 10px #00FF41, 0 0 20px #00FF41'
             }}
           ></div>
         </div>
 
         {/* Status dots */}
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           {[0, 1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="w-2 h-2 bg-[#00FF41] rounded-full animate-pulse"
-              style={{ animationDelay: `${i * 0.2}s` }}
+              className="w-2 h-2 bg-[#00FF41] rounded-full"
+              style={{
+                animationDelay: `${i * 0.15}s`,
+                animation: 'pulse 1s ease-in-out infinite',
+                boxShadow: '0 0 5px #00FF41'
+              }}
             ></div>
           ))}
         </div>
@@ -508,14 +923,36 @@ const UploadLanding = ({ onUploadComplete }: { onUploadComplete: (file: File) =>
 };
 
 // --- VIEW 2: MORPHEUS CHOICE ---
-const MorpheusChoice = ({ onNavigate }: { onNavigate: (view: string) => void }) => {
+const MorpheusChoice = ({ onNavigate, onModeSelect }: { onNavigate: (view: string) => void, onModeSelect: (mode: 'roast' | 'rewrite') => void }) => {
+
+  const handleRoast = () => {
+    onModeSelect('roast');
+    onNavigate('project-select');
+  };
+
+  const handleRewrite = () => {
+    onModeSelect('rewrite');
+    onNavigate('project-select');
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 relative z-20 overflow-hidden">
-      <div className="mb-6 text-center text-[#00FF41] animate-pulse font-mono text-sm md:text-base tracking-[0.2em]">
+      {/* Matrix Rain Background */}
+      <MatrixRain opacity={0.15} />
+
+      {/* Back Button - Top Left */}
+      <button
+        onClick={() => onNavigate('landing')}
+        className="absolute top-6 left-6 text-[#00FF41] hover:text-white transition-colors text-sm font-mono flex items-center gap-2 border border-[#003300] hover:border-[#00FF41] px-3 py-2 z-30"
+      >
+        ← BACK
+      </button>
+
+      <div className="mb-6 text-center text-[#00FF41] animate-pulse font-mono text-sm md:text-base tracking-[0.2em] relative z-20">
         CHOOSE YOUR REALITY
       </div>
 
-      <div className="morpheus-container">
+      <div className="morpheus-container relative z-20">
         <img
           src="/morpheus.png"
           alt="Morpheus"
@@ -528,10 +965,10 @@ const MorpheusChoice = ({ onNavigate }: { onNavigate: (view: string) => void }) 
           <span className="text-real glitch" data-text="REAL">REAL</span>
         </div>
 
-        {/* Red Pill (Roast) */}
+        {/* Red Pill (Roast) - Goes to project selection */}
         <div
           className="pill-zone pill-red"
-          onClick={() => onNavigate('dashboard')}
+          onClick={handleRoast}
         >
           <div className="tooltip text-red-500 border-red-500 shadow-[0_0_20px_red]">
             [ ROAST ME ]
@@ -540,10 +977,10 @@ const MorpheusChoice = ({ onNavigate }: { onNavigate: (view: string) => void }) 
           </div>
         </div>
 
-        {/* Blue Pill (Rewrite) */}
+        {/* Blue Pill (Rewrite) - Goes to project selection */}
         <div
           className="pill-zone pill-blue"
-          onClick={() => onNavigate('chat')}
+          onClick={handleRewrite}
         >
           <div className="tooltip text-cyan-400 border-cyan-400 shadow-[0_0_20px_cyan]">
             [ REWRITE ME ]
@@ -553,8 +990,8 @@ const MorpheusChoice = ({ onNavigate }: { onNavigate: (view: string) => void }) 
         </div>
       </div>
 
-      <div className="mt-8 font-mono text-xs text-green-900">
-        WAITING FOR INPUT...
+      <div className="mt-8 font-mono text-xs text-green-900 relative z-20">
+        HOVER OVER A PILL TO SEE OPTIONS...
       </div>
     </div>
   );
@@ -651,45 +1088,65 @@ const ProjectSelection = ({
         </p>
 
         {/* Project List */}
-        <div className="space-y-3 mb-6 max-h-[400px] overflow-y-auto">
+        <div className="space-y-3 mb-6 max-h-[400px] overflow-y-auto custom-scrollbar">
           {projects.length > 0 ? (
             projects.map((project, idx) => (
               <div
                 key={idx}
                 onClick={() => setSelectedProject(project)}
-                className={`p-4 border-2 cursor-pointer transition-all ${
+                className={`card-animate p-4 border-2 cursor-pointer transition-all duration-300 relative overflow-hidden group ${
                   selectedProject?.name === project.name
-                    ? 'border-[#00FF41] bg-[#00FF41]/10 shadow-[0_0_20px_rgba(0,255,65,0.3)]'
-                    : 'border-[#003300] bg-black hover:border-[#00FF41]/50'
+                    ? 'border-[#00FF41] bg-[#00FF41]/10 shadow-[0_0_30px_rgba(0,255,65,0.4)] scale-[1.02]'
+                    : 'border-[#003300] bg-black hover:border-[#00FF41]/70 hover:bg-[#001100] hover:translate-x-1'
                 }`}
+                style={{ animationDelay: `${idx * 0.1}s` }}
               >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-[#00FF41] font-bold text-lg">{project.name}</h3>
+                {/* Selection indicator */}
+                <div className={`absolute left-0 top-0 bottom-0 w-1 transition-all duration-300 ${
+                  selectedProject?.name === project.name ? 'bg-[#00FF41]' : 'bg-transparent group-hover:bg-[#00FF41]/50'
+                }`} />
+
+                {/* Hover scan effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00FF41]/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+
+                <div className="flex justify-between items-start relative z-10">
+                  <div className="pl-2">
+                    <h3 className={`font-bold text-lg transition-colors ${
+                      selectedProject?.name === project.name ? 'text-[#00FF41]' : 'text-[#00FF41]/80 group-hover:text-[#00FF41]'
+                    }`}>{project.name}</h3>
                     <p className="text-green-700 text-sm mt-1">{project.description}</p>
                     {project.technologies.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-2">
+                      <div className="flex flex-wrap gap-2 mt-3">
                         {project.technologies.map((tech, i) => (
-                          <span key={i} className="text-xs bg-[#003300] text-green-400 px-2 py-1 rounded">
+                          <span
+                            key={i}
+                            className="text-xs bg-[#003300] text-green-400 px-2 py-1 rounded hover:bg-[#00FF41]/20 transition-colors cursor-default"
+                          >
                             {tech}
                           </span>
                         ))}
                       </div>
                     )}
                   </div>
-                  {project.github_url && (
-                    <span className="text-xs text-green-600 bg-[#001100] px-2 py-1 rounded">
+                  {project.github_url ? (
+                    <span className="text-xs text-green-500 bg-[#001100] px-2 py-1 rounded border border-green-800 flex items-center gap-1">
+                      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                       GitHub ✓
+                    </span>
+                  ) : (
+                    <span className="text-xs text-yellow-600 bg-yellow-900/20 px-2 py-1 rounded border border-yellow-800 flex items-center gap-1">
+                      <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                      No Link
                     </span>
                   )}
                 </div>
                 {project.github_url && (
-                  <p className="text-xs text-green-800 mt-2 truncate">{project.github_url}</p>
+                  <p className="text-xs text-green-800 mt-2 truncate pl-2">{project.github_url}</p>
                 )}
               </div>
             ))
           ) : (
-            <div className="text-center py-8 text-green-700">
+            <div className="text-center py-8 text-green-700 card-animate">
               <p>No projects found in resume.</p>
               <p className="text-sm mt-2">Enter a GitHub URL manually below.</p>
             </div>
@@ -797,75 +1254,108 @@ const Dashboard = ({ onNavigate, uploadedFile, selectedProject }: { onNavigate: 
   return (
     <div className="min-h-screen p-6 md:p-12 relative z-20">
       <header className="flex justify-between items-center mb-12 border-b border-[#003300] pb-4">
-        <h2 className="text-2xl md:text-3xl text-[#00FF41] flex items-center gap-3">
-          <Lock className="w-6 h-6 animate-pulse" />
-          SECURITY CLEARANCE: <span className="text-red-500">LEVEL 1</span>
-        </h2>
-        <button onClick={() => onNavigate('landing')} className="text-xs hover:text-white">[ DISCONNECT ]</button>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => onNavigate('project-select')}
+            className="text-xs hover:text-[#00FF41] border border-[#003300] hover:border-[#00FF41] px-3 py-1 transition-colors"
+          >
+            ← PROJECTS
+          </button>
+          <h2 className="text-xl md:text-2xl text-[#00FF41] flex items-center gap-3">
+            <Lock className="w-5 h-5 animate-pulse" />
+            FORENSIC AUDIT: <span className="text-red-500">{selectedProject?.name || "PROJECT"}</span>
+          </h2>
+        </div>
+        <div className="flex items-center gap-3">
+          <MatrixButton onClick={() => onNavigate('morpheus')} className="text-xs text-[#00FF41] border border-[#003300] px-3 py-1">[ MENU ]</MatrixButton>
+          <MatrixButton onClick={() => onNavigate('landing')} variant="danger" className="text-xs text-red-500 border border-red-900 px-3 py-1">[ DISCONNECT ]</MatrixButton>
+        </div>
       </header>
 
       {/* Credibility Score + Verdict Banner */}
-      <div className="mb-8 p-6 bg-black border-2 border-[#00FF41] shadow-[0_0_30px_rgba(0,255,65,0.3)]">
+      <div className="mb-8 p-6 bg-black border-2 border-[#00FF41] shadow-[0_0_30px_rgba(0,255,65,0.3)] relative overflow-hidden">
+        {/* Scan line effect */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute w-full h-[2px] bg-gradient-to-r from-transparent via-[#00FF41] to-transparent opacity-50 animate-scan-line" />
+        </div>
+
         {/* Credibility Score */}
         {data.credibility_score !== undefined && (
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <span className="text-gray-400 font-mono text-sm">CREDIBILITY SCORE:</span>
-            <div className="relative w-48 h-4 bg-gray-800 border border-gray-600">
+          <div className="flex items-center justify-center gap-4 mb-4 relative z-10">
+            <span className="text-gray-400 font-mono text-sm tracking-wider">CREDIBILITY SCORE:</span>
+            <div className="relative w-48 h-5 bg-gray-800 border border-gray-600 overflow-hidden">
+              {/* Animated bar fill */}
               <div
-                className={`h-full transition-all duration-1000 ${
+                className={`h-full transition-all duration-[2000ms] ease-out ${
                   data.credibility_score >= 70 ? 'bg-[#00FF41]' :
                   data.credibility_score >= 40 ? 'bg-yellow-500' : 'bg-red-500'
                 }`}
-                style={{ width: `${data.credibility_score}%` }}
+                style={{
+                  width: `${data.credibility_score}%`,
+                  boxShadow: data.credibility_score >= 70
+                    ? '0 0 20px #00FF41, 0 0 40px #00FF41'
+                    : data.credibility_score >= 40
+                      ? '0 0 20px #eab308, 0 0 40px #eab308'
+                      : '0 0 20px #ef4444, 0 0 40px #ef4444'
+                }}
               />
+              {/* Glowing edge */}
+              <div className="absolute right-0 top-0 bottom-0 w-1 bg-white/50 animate-pulse" style={{ left: `${data.credibility_score}%` }} />
             </div>
-            <span className={`font-mono text-2xl font-bold ${
+            <div className={`font-mono text-3xl font-bold ${
               data.credibility_score >= 70 ? 'text-[#00FF41]' :
               data.credibility_score >= 40 ? 'text-yellow-500' : 'text-red-500'
             }`}>
-              {data.credibility_score}/100
-            </span>
+              <AnimatedCounter target={data.credibility_score} duration={2000} /><span className="text-gray-500">/100</span>
+            </div>
           </div>
         )}
 
-        {/* Verdict */}
+        {/* Verdict with Typewriter */}
         {data.verdict && (
-          <p className="text-[#00FF41] font-mono text-center text-lg border-t border-gray-700 pt-4">
-            ⚖️ <span className="font-bold">VERDICT:</span> {data.verdict}
-          </p>
+          <div className="text-[#00FF41] font-mono text-center text-lg border-t border-gray-700 pt-4 relative z-10">
+            <span className="text-2xl mr-2">⚖️</span>
+            <span className="font-bold text-white">VERDICT:</span>{" "}
+            <TypewriterText text={data.verdict} speed={25} className="text-[#00FF41]" />
+          </div>
         )}
 
         {/* Fallback to summary if no verdict */}
         {!data.verdict && data.summary && (
-          <p className="text-[#00FF41] font-mono text-center text-lg">
-            📋 <span className="font-bold">SUMMARY:</span> {data.summary}
-          </p>
+          <div className="text-[#00FF41] font-mono text-center text-lg relative z-10">
+            <span className="text-2xl mr-2">📋</span>
+            <span className="font-bold text-white">SUMMARY:</span>{" "}
+            <TypewriterText text={data.summary} speed={20} className="text-[#00FF41]" />
+          </div>
         )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
 
         {/* Verified Matches (Green) */}
-        <div className="bg-black border border-[#00FF41] p-6 shadow-[0_0_15px_rgba(0,255,65,0.1)]">
+        <div className="hover-card card-animate bg-black border border-[#00FF41] p-6 shadow-[0_0_15px_rgba(0,255,65,0.1)]" style={{ animationDelay: '0.1s' }}>
           <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-[#00FF41]">
-            <CheckCircle className="w-5 h-5" /> VERIFIED SKILLS
+            <CheckCircle className="w-5 h-5 animate-pulse" /> VERIFIED SKILLS
           </h3>
           <ul className="space-y-2 text-sm text-green-300/80 font-mono">
             {data.matches?.length > 0 ? data.matches.map((m: string, i: number) => (
-              <li key={i} className="flex items-start gap-2"><div className="w-1 h-1 bg-[#00FF41] mt-2"></div>{m}</li>
+              <li key={i} className="list-item-animate flex items-start gap-2 hover:bg-[#00FF41]/10 p-1 transition-colors" style={{ animationDelay: `${0.3 + i * 0.1}s` }}>
+                <div className="w-2 h-2 bg-[#00FF41] mt-1.5 rounded-full"></div>
+                <span>{m}</span>
+              </li>
             )) : <li className="text-gray-500">No verified matches found.</li>}
           </ul>
         </div>
 
         {/* Red Flags (Red - PHANTOMWARE) */}
-        <div className="bg-black border-2 border-red-600 p-6 shadow-[0_0_20px_rgba(255,50,50,0.3)] animate-pulse-slow">
+        <div className="hover-card card-animate bg-black border-2 border-red-600 p-6 shadow-[0_0_20px_rgba(255,50,50,0.3)]" style={{ animationDelay: '0.2s' }}>
           <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-red-500 glitch" data-text="🚩 RED FLAGS">
-            <ShieldAlert className="w-5 h-5 animate-pulse" /> 🚩 RED FLAGS
+            <ShieldAlert className="w-5 h-5 animate-bounce" /> 🚩 RED FLAGS
           </h3>
           <ul className="space-y-3 text-sm text-red-300 font-mono">
             {data.red_flags?.length > 0 ? data.red_flags.map((m: string, i: number) => (
-              <li key={i} className="flex items-start gap-2 bg-red-900/20 p-2 border-l-2 border-red-500">
-                <div className="w-2 h-2 bg-red-500 mt-1.5 animate-pulse"></div>
+              <li key={i} className="list-item-animate flex items-start gap-2 bg-red-900/20 p-2 border-l-2 border-red-500 hover:bg-red-900/40 transition-colors cursor-pointer" style={{ animationDelay: `${0.4 + i * 0.1}s` }}>
+                <div className="w-2 h-2 bg-red-500 mt-1.5 rounded-full animate-pulse"></div>
                 <span>{m}</span>
               </li>
             )) : <li className="text-green-500">✅ No red flags detected! Clean record.</li>}
@@ -873,13 +1363,16 @@ const Dashboard = ({ onNavigate, uploadedFile, selectedProject }: { onNavigate: 
         </div>
 
         {/* Missing Gems (Yellow) */}
-        <div className="bg-black border border-yellow-400 p-6 shadow-[0_0_15px_rgba(255,255,50,0.1)]">
+        <div className="hover-card card-animate bg-black border border-yellow-400 p-6 shadow-[0_0_15px_rgba(255,255,50,0.1)]" style={{ animationDelay: '0.3s' }}>
           <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-yellow-400">
-            <AlertTriangle className="w-5 h-5" /> 💎 HIDDEN GEMS
+            <AlertTriangle className="w-5 h-5 animate-pulse" /> 💎 HIDDEN GEMS
           </h3>
           <ul className="space-y-2 text-sm text-yellow-200/80 font-mono">
             {data.missing_gems?.length > 0 ? data.missing_gems.map((m: string, i: number) => (
-              <li key={i} className="flex items-start gap-2"><div className="w-1 h-1 bg-yellow-500 mt-2"></div>{m}</li>
+              <li key={i} className="list-item-animate flex items-start gap-2 hover:bg-yellow-500/10 p-1 transition-colors" style={{ animationDelay: `${0.5 + i * 0.1}s` }}>
+                <div className="w-2 h-2 bg-yellow-500 mt-1.5 rounded-full"></div>
+                <span>{m}</span>
+              </li>
             )) : <li className="text-gray-500">No hidden gems found.</li>}
           </ul>
         </div>
@@ -888,23 +1381,25 @@ const Dashboard = ({ onNavigate, uploadedFile, selectedProject }: { onNavigate: 
 
       <div className="flex justify-center gap-6 mt-8">
         {/* The Rewrite Button (Blue Pill) */}
-        <button
+        <MatrixButton
           onClick={() => onNavigate('chat')}
-          className="relative px-8 py-4 bg-transparent border border-cyan-500 text-cyan-500 font-bold text-lg hover:bg-cyan-500 hover:text-black transition-all duration-200 shadow-[0_0_20px_rgba(0,255,255,0.2)] flex items-center gap-2"
+          variant="cyan"
+          className="relative px-8 py-4 bg-transparent border-2 border-cyan-500 text-cyan-500 font-bold text-lg flex items-center gap-2"
         >
           <Wifi className="w-5 h-5" />
           REWRITE RESUME
-        </button>
+        </MatrixButton>
 
         {/* The DEFENSE MODE Button - VOICE INTERVIEW */}
-        <button
+        <MatrixButton
           onClick={() => onNavigate('voice-interview')}
-          className="relative px-8 py-4 bg-gradient-to-r from-[#FF1744] to-purple-600 text-white font-bold text-lg hover:scale-105 transition-all duration-200 shadow-[0_0_30px_rgba(255,23,68,0.5)] flex items-center gap-2"
+          variant="danger"
+          className="relative px-8 py-4 bg-gradient-to-r from-[#FF1744] to-purple-600 text-white font-bold text-lg flex items-center gap-2"
         >
           <Mic className="w-5 h-5 animate-pulse" />
           🎤 VOICE INTERVIEW
-          <span className="absolute -top-2 -right-2 bg-green-500 text-black text-xs px-2 py-1 rounded-full font-bold">LIVE</span>
-        </button>
+          <span className="absolute -top-2 -right-2 bg-green-500 text-black text-xs px-2 py-1 rounded-full font-bold animate-pulse">LIVE</span>
+        </MatrixButton>
       </div>
     </div>
   );
@@ -1068,6 +1563,20 @@ const VoiceInterview = ({ onNavigate }: { onNavigate: (view: string) => void }) 
 
   return (
     <div className="h-screen flex flex-col items-center justify-center p-8 relative z-20">
+      {/* Navigation Header */}
+      <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-30">
+        <button
+          onClick={() => onNavigate('dashboard')}
+          className="text-[#00FF41] hover:text-white transition-colors text-sm font-mono flex items-center gap-2 border border-[#003300] hover:border-[#00FF41] px-3 py-2"
+        >
+          ← DASHBOARD
+        </button>
+        <div className="flex gap-3">
+          <button onClick={() => onNavigate('morpheus')} className="text-xs hover:text-[#00FF41] border border-[#003300] hover:border-[#00FF41] px-3 py-2 transition-colors">[ MENU ]</button>
+          <button onClick={() => onNavigate('landing')} className="text-xs text-red-500 hover:text-white border border-red-900 hover:border-red-500 px-3 py-2 transition-colors">[ EXIT ]</button>
+        </div>
+      </div>
+
       {/* Title */}
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold text-[#FF1744] glitch-text mb-2">🎤 VOICE INTERVIEW</h1>
@@ -1120,18 +1629,19 @@ const VoiceInterview = ({ onNavigate }: { onNavigate: (view: string) => void }) 
         {/* Controls */}
         <div className="flex justify-center items-center gap-6">
           {!isCallActive ? (
-            <button
+            <MatrixButton
               onClick={startCall}
-              className="flex items-center gap-2 px-8 py-4 bg-[#00FF41] text-black font-bold rounded-full hover:bg-white transition-all hover:scale-105"
+              variant="glow"
+              className="flex items-center gap-2 px-8 py-4 bg-[#00FF41] text-black font-bold rounded-full"
             >
               <Phone className="w-6 h-6" />
               START LIVE CALL
-            </button>
+            </MatrixButton>
           ) : (
             <>
               {/* Hold-to-Talk Mic Button */}
               <div className="text-center">
-                <div className="text-xs text-gray-500 mb-2">
+                <div className="text-xs text-gray-500 mb-2 tracking-wider">
                   {isProcessing ? '⏳ PROCESSING...' : isSpeaking ? '🔊 AI SPEAKING...' : isListening ? '🎤 RECORDING...' : 'HOLD TO SPEAK'}
                 </div>
                 <button
@@ -1141,13 +1651,17 @@ const VoiceInterview = ({ onNavigate }: { onNavigate: (view: string) => void }) 
                   onTouchStart={startListening}
                   onTouchEnd={stopListening}
                   disabled={isSpeaking || isProcessing}
-                  className={`p-8 rounded-full border-4 transition-all duration-100 ${
+                  className={`p-8 rounded-full border-4 transition-all duration-200 relative ${
                     isListening
-                      ? 'border-red-500 bg-red-900 scale-110 shadow-[0_0_30px_red] animate-pulse'
-                      : 'border-[#00FF41] bg-black hover:bg-[#003300] hover:scale-105'
+                      ? 'border-red-500 bg-red-900 scale-125 shadow-[0_0_50px_red,0_0_100px_rgba(255,0,0,0.5)]'
+                      : 'border-[#00FF41] bg-black hover:bg-[#003300] hover:scale-110 hover:shadow-[0_0_30px_rgba(0,255,65,0.5)]'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
-                  <Mic className={`w-10 h-10 ${isListening ? 'text-white' : 'text-[#00FF41]'}`} />
+                  {/* Pulse ring when recording */}
+                  {isListening && (
+                    <span className="absolute inset-0 rounded-full border-4 border-red-500 animate-ping opacity-30" />
+                  )}
+                  <Mic className={`w-12 h-12 ${isListening ? 'text-white animate-pulse' : 'text-[#00FF41]'}`} />
                 </button>
               </div>
 
@@ -1170,13 +1684,6 @@ const VoiceInterview = ({ onNavigate }: { onNavigate: (view: string) => void }) 
         )}
       </div>
 
-      {/* Back Button */}
-      <button
-        onClick={() => onNavigate('dashboard')}
-        className="mt-8 text-gray-500 hover:text-[#00FF41] text-sm transition-colors"
-      >
-        ← Back to Dashboard
-      </button>
     </div>
   );
 };
@@ -1358,84 +1865,173 @@ const ChatInterface = ({ onNavigate, uploadedFile, mode, selectedProject }: { on
   return (
     <div className="h-screen p-4 md:p-8 flex flex-col md:flex-row gap-6 relative z-20">
 
-      {/* Left: Resume Preview (Mock) - Kept for visual balance */}
+      {/* Left: Project Info & Suggestions Panel */}
       <div className="w-full md:w-1/2 bg-[#0a0a0a] border border-[#003300] flex flex-col relative overflow-hidden hidden md:flex">
         <div className="absolute top-0 left-0 w-full h-1 bg-[#00FF41]/50"></div>
+
+        {/* Header */}
         <div className="bg-[#0f0f0f] p-3 border-b border-[#003300] flex justify-between items-center">
-          <span className="text-xs text-gray-500 font-mono">RESUME_V1_FINAL_REAL.PDF</span>
+          <span className="text-xs text-[#00FF41] font-mono flex items-center gap-2">
+            <Code className="w-4 h-4" />
+            PROJECT INTEL
+          </span>
           <div className="flex gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-900/50"></div>
-            <div className="w-3 h-3 rounded-full bg-yellow-900/50"></div>
-            <div className="w-3 h-3 rounded-full bg-green-900/50"></div>
+            <div className="w-3 h-3 rounded-full bg-red-500/50 animate-pulse"></div>
+            <div className="w-3 h-3 rounded-full bg-yellow-500/50"></div>
+            <div className="w-3 h-3 rounded-full bg-green-500/50"></div>
           </div>
         </div>
-        <div className="p-8 opacity-60 text-[10px] leading-relaxed font-sans text-gray-400 select-none overflow-y-auto custom-scrollbar">
+
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
           {isInterviewLoading ? (
-            // LOADING ANIMATION FOR INTERVIEW
+            // LOADING ANIMATION
             <div className="flex flex-col items-center justify-center h-full">
-              <div className="text-[#00FF41] text-center space-y-6">
+              <MatrixRain opacity={0.3} />
+              <div className="text-[#00FF41] text-center space-y-6 relative z-10">
                 <div className="text-2xl font-bold animate-pulse">ANALYZING CODE...</div>
                 <div className="text-sm opacity-70">GENERATING INTERROGATION PROTOCOL</div>
-
-                {/* Matrix Rain Effect */}
-                <div className="relative w-full h-64 overflow-hidden border border-[#00FF41]/30">
-                  {[...Array(20)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="absolute top-0 text-[#00FF41] text-xs font-mono opacity-30 animate-[fall_2s_linear_infinite]"
-                      style={{
-                        left: `${i * 5}%`,
-                        animationDelay: `${i * 0.1}s`
-                      }}
-                    >
-                      {Array.from({ length: 20 }, () => String.fromCharCode(33 + Math.random() * 94)).join('\n')}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Scanning Lines */}
-                <div className="w-full h-2 bg-[#001100] relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00FF41] to-transparent animate-[scan_1.5s_linear_infinite]"></div>
+                <div className="w-48 h-2 bg-[#001100] mx-auto relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00FF41] to-transparent animate-[loading-bar_1.5s_linear_infinite]"></div>
                 </div>
               </div>
-              <style>{`
-                @keyframes fall {
-                  0% { transform: translateY(-100%); }
-                  100% { transform: translateY(400%); }
-                }
-                @keyframes scan {
-                  0% { transform: translateX(-100%); }
-                  100% { transform: translateX(100%); }
-                }
-              `}</style>
             </div>
           ) : (
-            // NORMAL RESUME PREVIEW
             <>
-              <div className="w-full h-8 bg-[#1a1a1a] mb-6"></div>
-              <div className="flex gap-4 mb-6">
-                <div className="w-1/3 h-64 bg-[#1a1a1a]"></div>
-                <div className="w-2/3 space-y-4">
-                  <div className="w-full h-4 bg-[#1a1a1a]"></div>
-                  <div className="w-5/6 h-4 bg-[#1a1a1a]"></div>
-                  <div className="w-full h-4 bg-[#1a1a1a]"></div>
-                  <div className="w-4/5 h-4 bg-[#1a1a1a]"></div>
-                  <div className="w-full h-20 bg-[#1a1a1a] mt-4"></div>
+              {/* Project Card */}
+              {selectedProject && (
+                <div className="hover-card border border-[#00FF41]/30 bg-[#001100] p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <h3 className="text-[#00FF41] font-bold text-lg">{selectedProject.name}</h3>
+                    {selectedProject.github_url && (
+                      <a
+                        href={selectedProject.github_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
+                      >
+                        <Github className="w-3 h-3" /> View
+                      </a>
+                    )}
+                  </div>
+                  <p className="text-green-700 text-sm mb-3">{selectedProject.description}</p>
+
+                  {/* Tech Stack */}
+                  {selectedProject.technologies.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {selectedProject.technologies.map((tech, i) => (
+                        <span
+                          key={i}
+                          className="text-xs bg-[#003300] text-green-400 px-2 py-1 rounded hover:bg-[#00FF41]/20 transition-colors"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Quick Tips Section */}
+              <div className="border border-yellow-500/30 bg-yellow-900/10 p-4">
+                <h4 className="text-yellow-400 font-bold text-sm mb-3 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4" />
+                  QUICK IMPROVEMENT TIPS
+                </h4>
+                <ul className="space-y-2 text-xs text-yellow-200/80">
+                  <li className="flex items-start gap-2 list-item-animate" style={{ animationDelay: '0.1s' }}>
+                    <span className="text-yellow-500">→</span>
+                    Quantify achievements with metrics (%, $, time saved)
+                  </li>
+                  <li className="flex items-start gap-2 list-item-animate" style={{ animationDelay: '0.2s' }}>
+                    <span className="text-yellow-500">→</span>
+                    Use action verbs: Built, Designed, Implemented, Led
+                  </li>
+                  <li className="flex items-start gap-2 list-item-animate" style={{ animationDelay: '0.3s' }}>
+                    <span className="text-yellow-500">→</span>
+                    Include tech stack in project descriptions
+                  </li>
+                  <li className="flex items-start gap-2 list-item-animate" style={{ animationDelay: '0.4s' }}>
+                    <span className="text-yellow-500">→</span>
+                    Add GitHub links to verify your claims
+                  </li>
+                </ul>
+              </div>
+
+              {/* ATS Keywords Section */}
+              <div className="border border-cyan-500/30 bg-cyan-900/10 p-4">
+                <h4 className="text-cyan-400 font-bold text-sm mb-3 flex items-center gap-2">
+                  <Wifi className="w-4 h-4" />
+                  ATS POWER KEYWORDS
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {['Agile', 'CI/CD', 'REST API', 'Microservices', 'Cloud', 'Docker', 'Git', 'Testing', 'Scalable', 'Performance'].map((keyword, i) => (
+                    <span
+                      key={i}
+                      className="text-xs bg-cyan-900/30 text-cyan-300 px-2 py-1 rounded border border-cyan-700/30 hover:bg-cyan-500/20 cursor-pointer transition-colors"
+                      onClick={() => {
+                        // Copy to clipboard
+                        navigator.clipboard.writeText(keyword);
+                      }}
+                      title="Click to copy"
+                    >
+                      {keyword}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">Click to copy keyword</p>
+              </div>
+
+              {/* Command Shortcuts */}
+              <div className="border border-[#00FF41]/30 bg-[#001100] p-4">
+                <h4 className="text-[#00FF41] font-bold text-sm mb-3 flex items-center gap-2">
+                  <Terminal className="w-4 h-4" />
+                  QUICK COMMANDS
+                </h4>
+                <div className="space-y-2 text-xs font-mono">
+                  <div className="flex justify-between items-center p-2 bg-black/50 hover:bg-[#00FF41]/10 cursor-pointer transition-colors" onClick={() => setInput("Rewrite my project description with metrics")}>
+                    <span className="text-gray-400">"Rewrite with metrics"</span>
+                    <span className="text-[#00FF41]">→</span>
+                  </div>
+                  <div className="flex justify-between items-center p-2 bg-black/50 hover:bg-[#00FF41]/10 cursor-pointer transition-colors" onClick={() => setInput("Make my experience sound more senior")}>
+                    <span className="text-gray-400">"Sound more senior"</span>
+                    <span className="text-[#00FF41]">→</span>
+                  </div>
+                  <div className="flex justify-between items-center p-2 bg-black/50 hover:bg-[#00FF41]/10 cursor-pointer transition-colors" onClick={() => setInput("Add relevant keywords for ATS")}>
+                    <span className="text-gray-400">"Add ATS keywords"</span>
+                    <span className="text-[#00FF41]">→</span>
+                  </div>
+                  <div className="flex justify-between items-center p-2 bg-black/50 hover:bg-[#00FF41]/10 cursor-pointer transition-colors" onClick={() => setInput("Generate a professional summary")}>
+                    <span className="text-gray-400">"Generate summary"</span>
+                    <span className="text-[#00FF41]">→</span>
+                  </div>
                 </div>
               </div>
-              <div className="w-full h-40 bg-[#1a1a1a]"></div>
+
+              {/* Stats Mock */}
+              <div className="border border-purple-500/30 bg-purple-900/10 p-4">
+                <h4 className="text-purple-400 font-bold text-sm mb-3 flex items-center gap-2">
+                  <ShieldAlert className="w-4 h-4" />
+                  SESSION STATS
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="text-center p-2 bg-black/30 rounded">
+                    <div className="text-2xl font-bold text-[#00FF41]">{messages.filter(m => m.type === 'user').length}</div>
+                    <div className="text-xs text-gray-500">Questions</div>
+                  </div>
+                  <div className="text-center p-2 bg-black/30 rounded">
+                    <div className="text-2xl font-bold text-cyan-400">{messages.filter(m => m.type === 'ai').length}</div>
+                    <div className="text-xs text-gray-500">Responses</div>
+                  </div>
+                </div>
+              </div>
             </>
           )}
         </div>
 
-        {/* Overlay scanning line */}
-        <div className="absolute inset-0 border-b-2 border-[#00FF41]/30 animate-[scan_3s_linear_infinite] pointer-events-none bg-gradient-to-b from-transparent to-[#00FF41]/5"></div>
-        <style>{`
-            @keyframes scan {
-                0% { transform: translateY(-100%); }
-                100% { transform: translateY(100%); }
-            }
-        `}</style>
+        {/* Scan line effect */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute w-full h-[2px] bg-gradient-to-r from-transparent via-[#00FF41]/30 to-transparent animate-scan-line"></div>
+        </div>
       </div>
 
       <div className="w-full md:w-1/2 flex flex-col border border-[#00FF41] bg-black/90 shadow-[0_0_30px_rgba(0,0,0,0.8)] relative">
@@ -1453,18 +2049,27 @@ const ChatInterface = ({ onNavigate, uploadedFile, mode, selectedProject }: { on
         )}
 
         <div className="p-4 border-b border-[#00FF41] flex justify-between items-center bg-[#001100]">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-[#00FF41] rounded-full animate-pulse"></div>
-            <span className="text-sm font-bold tracking-widest">LIVE UPLINK</span>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => onNavigate('project-select')}
+              className="text-xs hover:text-[#00FF41] border border-[#003300] hover:border-[#00FF41] px-2 py-1 transition-colors"
+            >
+              ← PROJECTS
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-[#00FF41] rounded-full animate-pulse"></div>
+              <span className="text-sm font-bold tracking-widest">{mode === 'interview' ? 'INTERVIEW MODE' : 'REWRITE MODE'}</span>
+            </div>
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-3">
             <button
               onClick={() => onNavigate('dashboard')}
-              className="text-xs hover:text-[#00FF41] transition-colors border border-transparent hover:border-[#00FF41] px-2 py-1"
+              className="text-xs hover:text-[#00FF41] transition-colors border border-[#003300] hover:border-[#00FF41] px-2 py-1"
             >
-              [ VIEW DASHBOARD ]
+              [ DASHBOARD ]
             </button>
-            <button onClick={() => onNavigate('morpheus')} className="text-xs hover:text-white">[ EXIT TERMINAL ]</button>
+            <button onClick={() => onNavigate('morpheus')} className="text-xs hover:text-[#00FF41] border border-[#003300] hover:border-[#00FF41] px-2 py-1 transition-colors">[ MENU ]</button>
+            <button onClick={() => onNavigate('landing')} className="text-xs text-red-500 hover:text-white border border-red-900 hover:border-red-500 px-2 py-1 transition-colors">[ EXIT ]</button>
           </div>
         </div>
 
@@ -1573,7 +2178,7 @@ export default function App() {
 
       <main className="relative z-10">
         {currentView === 'landing' && <UploadLanding onUploadComplete={handleUploadComplete} />}
-        {currentView === 'morpheus' && <MorpheusChoice onNavigate={handleNavigate} />}
+        {currentView === 'morpheus' && <MorpheusChoice onNavigate={setCurrentView} onModeSelect={setSelectedMode} />}
         {currentView === 'project-select' && (
           <ProjectSelection
             onNavigate={setCurrentView}
