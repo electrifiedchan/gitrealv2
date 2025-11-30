@@ -1787,6 +1787,9 @@ const ChatInterface = ({ onNavigate, uploadedFile, mode, selectedProject }: { on
     }
   };
 
+  // Typing indicator state
+  const [isTyping, setIsTyping] = useState(false);
+
   const handleSend = async (e: React.FormEvent | null, overrideInput?: string) => {
     if (e) e.preventDefault();
     const textToSend = overrideInput || input;
@@ -1795,6 +1798,7 @@ const ChatInterface = ({ onNavigate, uploadedFile, mode, selectedProject }: { on
     const userMsg = { id: Date.now(), type: 'user', text: textToSend };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
+    setIsTyping(true); // Show typing indicator
 
     try {
       const history = messages.filter(m => m.type !== 'system').map(m => ({ type: m.type, text: m.text }));
@@ -1808,6 +1812,8 @@ const ChatInterface = ({ onNavigate, uploadedFile, mode, selectedProject }: { on
 
     } catch (e) {
       setMessages(prev => [...prev, { id: Date.now(), type: 'system', text: 'CONNECTION DROPPED. RETRY.' }]);
+    } finally {
+      setIsTyping(false); // Hide typing indicator
     }
   };
 
@@ -2093,6 +2099,27 @@ const ChatInterface = ({ onNavigate, uploadedFile, mode, selectedProject }: { on
               </div>
             </div>
           ))}
+
+          {/* Typing Indicator */}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="max-w-[95%] p-4 border border-[#00FF41] bg-[#001100]">
+                <span className="font-bold opacity-50 mr-2 block mb-2">&gt; GITREAL</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[#00FF41]">PROCESSING</span>
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 bg-[#00FF41] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                    <span className="w-2 h-2 bg-[#00FF41] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                    <span className="w-2 h-2 bg-[#00FF41] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                  </div>
+                </div>
+                <div className="mt-2 h-1 w-32 bg-[#003300] rounded overflow-hidden">
+                  <div className="h-full bg-[#00FF41] animate-[loading-bar_1.5s_ease-in-out_infinite]"></div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div ref={messagesEndRef} />
         </div>
 
