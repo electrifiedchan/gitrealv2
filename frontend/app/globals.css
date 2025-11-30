@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+  --color-neon-green: #00ff41;
+  --color-neon-red: #ff1744;
+  --color-neon-blue: #00ffff;
+  --color-neon-yellow: #ffff33;
+  --color-dark-bg: #050505;
+}
+
+:root {
+  --background: #050505;
+  --foreground: #ededed;
+  --neon-green: #00ff41;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* Helper for the Neon Text */
+.text-neon {
+  color: var(--neon-green);
+  text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+}
+
+/* The Scanline Animation */
+.scanline {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: rgba(0, 255, 65, 0.1);
+  opacity: 0.4;
+  animation: scan 6s linear infinite;
+  pointer-events: none;
+  z-index: 50;
+}
+
+@keyframes scan {
+  0% { top: 0%; }
+  100% { top: 100%; }
+}

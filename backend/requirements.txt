@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+pydantic
+requests
+pypdf
+google-generativeai
+deepgram-sdk
+python-multipart
+
