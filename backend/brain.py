@@ -228,10 +228,17 @@ def analyze_resume_vs_code(resume_text, code_context, project_name=None):
     ONLY analyze THIS specific project. Do NOT mention or flag other projects from the resume.
     """
 
+    # Get current date for context (so AI doesn't flag recent dates as "future")
+    from datetime import datetime
+    current_date = datetime.now().strftime("%B %d, %Y")
+
     # Special prompt for PHANTOMWARE mode (no code provided)
     if no_code_provided and project_name:
         prompt = f"""
         You are 'GitReal', a Forensic Resume Auditor.
+
+        📅 **TODAY'S DATE: {current_date}**
+        (Use this to correctly evaluate dates. Do NOT flag past dates as "future dates".)
 
         The user selected the project "{project_name}" but provided NO GitHub link or code.
 
@@ -259,6 +266,10 @@ def analyze_resume_vs_code(resume_text, code_context, project_name=None):
     else:
         prompt = f"""
         You are 'GitReal', a ruthless Senior Staff Engineer and Forensic Resume Auditor.
+
+        📅 **TODAY'S DATE: {current_date}**
+        (Use this to correctly evaluate dates on the resume. Do NOT flag dates that are in the past as "future dates".)
+
         {project_focus}
 
         **INPUT DATA:**

@@ -44,3 +44,108 @@ body {
   0% { top: 0%; }
   100% { top: 100%; }
 }
+
+/* Premium Fade-in with Scale */
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Smooth slide up with fade */
+@keyframes slideUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+    filter: blur(10px);
+  }
+  50% {
+    filter: blur(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* Glitch-in effect */
+@keyframes glitchIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-10px);
+    clip-path: inset(0 100% 0 0);
+  }
+  50% {
+    clip-path: inset(0 50% 0 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* Border draw animation */
+@keyframes borderDraw {
+  0% {
+    clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+  }
+  25% {
+    clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
+  }
+  50% {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 100% 100%);
+  }
+  75% {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+  100% {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+}
+
+/* Glow pulse on entry */
+@keyframes glowPulseIn {
+  0% {
+    opacity: 0;
+    box-shadow: 0 0 0 rgba(0, 255, 65, 0);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 60px rgba(0, 255, 65, 0.6);
+  }
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 40px rgba(0, 255, 65, 0.2);
+  }
+}
+
+/* Animation classes */
+.animate-fade-in-scale {
+  animation: fadeInScale 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-up-fade {
+  animation: slideUpFade 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-glitch-in {
+  animation: glitchIn 0.6s ease-out forwards;
+}
+
+.animate-glow-pulse-in {
+  animation: glowPulseIn 1.2s ease-out forwards;
+}
+
+/* Loading bar animation */
+@keyframes loading-bar {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(0%); }
+  100% { transform: translateX(100%); }
+}

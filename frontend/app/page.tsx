@@ -22,7 +22,8 @@ import {
   VolumeX,
   Phone,
   PhoneOff,
-  Github
+  Github,
+  Trash2
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -875,13 +876,15 @@ const UploadLanding = ({ onUploadComplete }: { onUploadComplete: (file: File) =>
 
       {showUpload && (
         <>
-          <div className="w-full max-w-xl mx-auto border-2 border-[#00FF41] bg-black p-8 shadow-[0_0_40px_rgba(0,255,65,0.2)] animate-fade-in">
-            <h3 className="text-xl mb-8 border-b-2 border-[#00FF41] pb-3 flex items-center gap-3">
+          <div className="w-full max-w-xl mx-auto border-2 border-[#00FF41] bg-black p-8 animate-slide-up-fade animate-glow-pulse-in opacity-0"
+               style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
+            <h3 className="text-xl mb-8 border-b-2 border-[#00FF41] pb-3 flex items-center gap-3 animate-glitch-in"
+                style={{ animationDelay: '0.5s', opacity: 0, animationFillMode: 'forwards' }}>
               <Terminal size={24} /> UPLOAD_CANDIDATE_DATA
             </h3>
 
             <div className="space-y-8">
-              <div className="space-y-3">
+              <div className="space-y-3 animate-slide-up-fade opacity-0" style={{ animationDelay: '0.7s', animationFillMode: 'forwards' }}>
                 <label className="text-sm uppercase flex items-center gap-2 text-gray-300 font-bold">
                   <FileText size={16} /> Upload Resume (PDF)
                 </label>
@@ -898,7 +901,8 @@ const UploadLanding = ({ onUploadComplete }: { onUploadComplete: (file: File) =>
               <button
                 onClick={handleSubmit}
                 disabled={loading || !file}
-                className="w-full bg-[#00FF41] text-black font-bold py-4 text-lg hover:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(0,255,65,0.5)] hover:shadow-[0_0_50px_rgba(0,255,65,0.8)]"
+                className="w-full bg-[#00FF41] text-black font-bold py-4 text-lg hover:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(0,255,65,0.5)] hover:shadow-[0_0_50px_rgba(0,255,65,0.8)] animate-slide-up-fade opacity-0"
+                style={{ animationDelay: '0.9s', animationFillMode: 'forwards' }}
               >
                 {loading ? (
                   <span className="flex items-center gap-3">
@@ -910,7 +914,8 @@ const UploadLanding = ({ onUploadComplete }: { onUploadComplete: (file: File) =>
               </button>
             </div>
           </div>
-          <div className="absolute bottom-8 font-mono text-xs text-green-900 tracking-widest animate-fade-in">
+          <div className="absolute bottom-8 font-mono text-xs text-green-900 tracking-widest animate-slide-up-fade opacity-0"
+               style={{ animationDelay: '1.1s', animationFillMode: 'forwards' }}>
             SYSTEM VERSION 4.2.4 // UNAUTHORIZED ACCESS DETECTED
           </div>
         </>
@@ -1005,16 +1010,106 @@ interface Project {
   technologies: string[];
 }
 
+// --- CACHE UTILITIES (must be after Project interface) ---
+const generateFileKey = (file: File | null): string => {
+  if (!file) return '';
+  return `resume_${file.name}_${file.size}`;
+};
+
+const getCachedProjects = (fileKey: string): Project[] | null => {
+  if (!fileKey || typeof window === 'undefined') return null;
+  try {
+    const cached = localStorage.getItem(`projects_${fileKey}`);
+    if (cached) {
+      const data = JSON.parse(cached);
+      // Cache is valid for 24 hours
+      if (Date.now() - data.timestamp < 24 * 60 * 60 * 1000) {
+        return data.projects;
+      }
+    }
+  } catch (e) {
+    console.error('Cache read error:', e);
+  }
+  return null;
+};
+
+const setCachedProjects = (fileKey: string, projects: Project[]) => {
+  if (!fileKey || typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(`projects_${fileKey}`, JSON.stringify({
+      projects,
+      timestamp: Date.now()
+    }));
+  } catch (e) {
+    console.error('Cache write error:', e);
+  }
+};
+
+// Generate a unique key for a project (based on GitHub URL to ensure consistency)
+const generateProjectKey = (project: Project | null): string => {
+  if (!project) return 'unknown_project';
+  // Use GitHub URL as primary key (most unique identifier)
+  if (project.github_url) {
+    return project.github_url.replace(/[^a-zA-Z0-9]/g, '_');
+  }
+  // Fallback to name
+  return `project_${project.name}`.replace(/[^a-zA-Z0-9]/g, '_');
+};
+
+// Full analysis cache (includes both roast data AND initial_chat/STAR bullets)
+const getCachedAnalysis = (projectKey: string): { data?: any; initial_chat?: string } | null => {
+  if (!projectKey || typeof window === 'undefined') return null;
+  try {
+    const cached = localStorage.getItem(`analysis_${projectKey}`);
+    if (cached) {
+      const parsedCache = JSON.parse(cached);
+      // Cache is valid for 1 hour
+      if (Date.now() - parsedCache.timestamp < 60 * 60 * 1000) {
+        return parsedCache.analysis;
+      }
+    }
+  } catch (e) {
+    console.error('Analysis cache read error:', e);
+  }
+  return null;
+};
+
+const setCachedAnalysis = (projectKey: string, analysis: { data?: any; initial_chat?: string }) => {
+  if (!projectKey || typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(`analysis_${projectKey}`, JSON.stringify({
+      analysis,
+      timestamp: Date.now()
+    }));
+  } catch (e) {
+    console.error('Analysis cache write error:', e);
+  }
+};
+
+const clearProjectCaches = () => {
+  if (typeof window === 'undefined') return;
+  const keys = Object.keys(localStorage);
+  keys.forEach(key => {
+    if (key.startsWith('projects_') || key.startsWith('analysis_')) {
+      localStorage.removeItem(key);
+    }
+  });
+};
+
 const ProjectSelection = ({
   onNavigate,
   uploadedFile,
   onProjectSelect,
-  mode = 'roast'
+  mode = 'roast',
+  cachedProjects = null,
+  onProjectsExtracted
 }: {
   onNavigate: (view: string) => void,
   uploadedFile: File | null,
   onProjectSelect: (project: Project) => void,
-  mode?: 'roast' | 'rewrite'
+  mode?: 'roast' | 'rewrite',
+  cachedProjects?: Project[] | null,
+  onProjectsExtracted?: (projects: Project[]) => void
 }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1030,13 +1125,28 @@ const ProjectSelection = ({
         return;
       }
 
+      // ✅ Use cached projects if available (skip API call!)
+      if (cachedProjects && cachedProjects.length > 0) {
+        console.log('⚡ Using cached projects - skipping OCR');
+        setProjects(cachedProjects);
+        setLoading(false);
+        return;
+      }
+
+      // No cache - fetch from API
+      console.log('🔄 No cache - extracting projects via OCR...');
       const formData = new FormData();
       formData.append("file", uploadedFile);
 
       try {
         const res = await axios.post("http://localhost:8000/extract_projects", formData);
         if (res.data.status === "success") {
-          setProjects(res.data.projects || []);
+          const extractedProjects = res.data.projects || [];
+          setProjects(extractedProjects);
+          // Cache the results for future use
+          if (onProjectsExtracted) {
+            onProjectsExtracted(extractedProjects);
+          }
         }
       } catch (e) {
         console.error("Error extracting projects:", e);
@@ -1047,7 +1157,7 @@ const ProjectSelection = ({
     };
 
     extractProjects();
-  }, [uploadedFile]);
+  }, [uploadedFile, cachedProjects]);
 
   const handleContinue = () => {
     const targetView = isRoast ? 'dashboard' : 'chat';
@@ -1210,6 +1320,18 @@ const Dashboard = ({ onNavigate, uploadedFile, selectedProject }: { onNavigate: 
         return;
       }
 
+      // Generate cache key using unified function
+      const projectKey = generateProjectKey(selectedProject);
+
+      // ✅ Check cache first (look for .data field in unified cache)
+      const cachedResult = getCachedAnalysis(projectKey);
+      if (cachedResult?.data) {
+        console.log('⚡ [ROAST] Using cached analysis for:', projectKey);
+        setData(cachedResult.data);
+        return;
+      }
+
+      console.log('🔄 [ROAST] No cache - fetching analysis for:', projectKey);
       setLoading(true);
       const formData = new FormData();
       formData.append("file", uploadedFile);
@@ -1225,7 +1347,13 @@ const Dashboard = ({ onNavigate, uploadedFile, selectedProject }: { onNavigate: 
       try {
         const res = await axios.post("http://localhost:8000/analyze", formData);
         const responseData = res.data.data;
-        setData(typeof responseData === 'string' ? JSON.parse(responseData) : responseData);
+        const parsedData = typeof responseData === 'string' ? JSON.parse(responseData) : responseData;
+        const initialChat = res.data.initial_chat || '';
+        setData(parsedData);
+
+        // ✅ Cache BOTH roast data AND initial_chat (for rewrite mode)
+        setCachedAnalysis(projectKey, { data: parsedData, initial_chat: initialChat });
+        console.log('💾 [ROAST] Cached full analysis for:', projectKey);
       } catch (e) {
         console.error(e);
         setData({
@@ -1783,6 +1911,30 @@ const ChatInterface = ({ onNavigate, uploadedFile, mode, selectedProject }: { on
     // Prevent re-initialization if already initialized
     if (initialized) return;
 
+    const projectKey = generateProjectKey(selectedProject);
+    const projectInfo = selectedProject ? `📁 PROJECT: ${selectedProject.name}` : '';
+
+    // ✅ Check cache first - maybe this project was already analyzed in Roast mode
+    const cachedResult = getCachedAnalysis(projectKey);
+    if (cachedResult?.initial_chat) {
+      console.log('⚡ [REWRITE] Using cached initial_chat for:', projectKey);
+      setInitialized(true);
+      setMessages(prev => {
+        if (prev.length > 0 && prev.some(m => m.type === 'user')) {
+          return prev;
+        }
+        return [
+          { id: 1, type: 'system', text: 'ENCRYPTED CHANNEL ESTABLISHED.' },
+          ...(projectInfo ? [{ id: 1.5, type: 'system', text: projectInfo }] : []),
+          { id: 2, type: 'system', text: '⚡ CACHED DATA LOADED.' },
+          { id: 3, type: 'ai', text: cachedResult.initial_chat }
+        ];
+      });
+      return;
+    }
+
+    // No cache - fetch from API
+    console.log('🔄 [REWRITE] No cache - fetching analysis for:', projectKey);
     setLoading(true);
     const formData = new FormData();
     formData.append("file", file);
@@ -1792,7 +1944,13 @@ const ChatInterface = ({ onNavigate, uploadedFile, mode, selectedProject }: { on
       const res = await axios.post("http://localhost:8000/analyze", formData);
       setInitialized(true);
       const starAnalysis = res.data.initial_chat || "Analysis complete.";
-      const projectInfo = selectedProject ? `📁 PROJECT: ${selectedProject.name}` : '';
+      const responseData = res.data.data;
+      const parsedData = typeof responseData === 'string' ? JSON.parse(responseData) : responseData;
+
+      // ✅ Cache the result for future use (both modes)
+      setCachedAnalysis(projectKey, { data: parsedData, initial_chat: starAnalysis });
+      console.log('💾 [REWRITE] Cached full analysis for:', projectKey);
+
       // Only set initial messages if there are none (fresh start)
       setMessages(prev => {
         if (prev.length > 0 && prev.some(m => m.type === 'user')) {
@@ -2184,15 +2342,42 @@ export default function App() {
   const [enableEffects, setEnableEffects] = useState(true);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [selectedMode, setSelectedMode] = useState<'roast' | 'rewrite'>('roast'); // Track which path user chose
+  const [selectedMode, setSelectedMode] = useState<'roast' | 'rewrite'>('roast');
+  const [cachedProjects, setCachedProjectsState] = useState<Project[] | null>(null);
+  const [currentFileKey, setCurrentFileKey] = useState<string>('');
 
   const handleUploadComplete = (file: File) => {
+    const newFileKey = generateFileKey(file);
+
+    // Check if it's a different file - if so, clear old caches
+    if (currentFileKey && currentFileKey !== newFileKey) {
+      clearProjectCaches();
+      setCachedProjectsState(null);
+    }
+
+    // Check if we have cached projects for this file
+    const cached = getCachedProjects(newFileKey);
+    if (cached) {
+      console.log('📦 Using cached projects for:', file.name);
+      setCachedProjectsState(cached);
+    }
+
+    setCurrentFileKey(newFileKey);
     setUploadedFile(file);
     setCurrentView('morpheus');
   };
 
   const handleProjectSelect = (project: Project) => {
     setSelectedProject(project);
+  };
+
+  const handleProjectsExtracted = (projects: Project[]) => {
+    // Cache the extracted projects
+    if (currentFileKey) {
+      setCachedProjects(currentFileKey, projects);
+      setCachedProjectsState(projects);
+      console.log('💾 Cached projects for:', currentFileKey);
+    }
   };
 
   // Update navigation to go to project selection for both roast and rewrite
@@ -2221,7 +2406,26 @@ export default function App() {
       </div>
       {enableEffects && <div className="scanlines fixed inset-0 pointer-events-none z-50"></div>}
 
-      <div className="absolute top-4 right-4 z-50 flex gap-4 items-center">
+      <div className="absolute top-4 right-4 z-50 flex gap-2 items-center">
+        {/* Developer: Clear Cache Button */}
+        <button
+          onClick={() => {
+            clearProjectCaches();
+            setCachedProjectsState(null);
+            // Show toast notification
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-16 right-4 bg-[#00FF41] text-black px-4 py-2 text-xs font-bold z-[100] animate-slide-up-fade';
+            toast.textContent = '🗑️ CACHE PURGED';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+          }}
+          className="text-xs flex items-center gap-2 border border-red-900 px-2 py-1 hover:border-red-500 hover:text-red-500 transition-colors text-red-900"
+          title="Clear cached projects & analysis (Developer Tool)"
+        >
+          <Trash2 className="w-3 h-3" />
+          CLEAR CACHE
+        </button>
+
         <button
           onClick={() => setEnableEffects(!enableEffects)}
           className="text-xs flex items-center gap-2 border border-[#003300] px-2 py-1 hover:border-[#00FF41] hover:text-[#00FF41] transition-colors text-[#003300]"
@@ -2240,6 +2444,8 @@ export default function App() {
             uploadedFile={uploadedFile}
             onProjectSelect={handleProjectSelect}
             mode={selectedMode}
+            cachedProjects={cachedProjects}
+            onProjectsExtracted={handleProjectsExtracted}
           />
         )}
         {currentView === 'dashboard' && <Dashboard onNavigate={setCurrentView} uploadedFile={uploadedFile} selectedProject={selectedProject} />}
